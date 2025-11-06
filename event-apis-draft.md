@@ -13,14 +13,16 @@
   - [提交回覆](#7-提交回覆)
   - [建立事件](#8-建立事件)
   - [追加獎金](#9-追加獎金)
+  - [取得回覆收據](#10-取得回覆收據)
+  - [取得平台公鑰列表](#11-取得平台公鑰列表)
 - [Admin](#admin)
-  - [更新事件狀態](#10-更新事件狀態)
-  - [取消事件](#11-取消事件)
-  - [隱藏事件](#12-隱藏事件)
-  - [鎖定事件](#13-鎖定事件)
-  - [執行抽獎](#14-執行抽獎)
-  - [建立快照](#15-建立快照)
-  - [隱藏回覆](#16-隱藏回覆)
+  - [更新事件狀態](#12-更新事件狀態)
+  - [取消事件](#13-取消事件)
+  - [隱藏事件](#14-隱藏事件)
+  - [鎖定事件](#15-鎖定事件)
+  - [執行抽獎](#16-執行抽獎)
+  - [建立快照](#17-建立快照)
+  - [隱藏回覆](#18-隱藏回覆)
 - [統一回應格式](#統一回應格式)
 - [錯誤碼說明](#錯誤碼說明)
 - [使用範例](#使用範例)
@@ -47,6 +49,8 @@
 | `/api/v1/events/:event_id/lottery` | POST | JWT | Admin | 執行抽獎流程 |
 | `/api/v1/events/:event_id/snapshot` | POST | JWT | Admin | 建立快照 |
 | `/api/v1/events/:event_id/replies/:reply_id/hide` | PUT | JWT | Admin | 隱藏回覆 |
+| `/api/v1/events/:event_id/replies/:reply_id/receipt` | GET | - | - | 取得回覆收據 |
+| `/api/v1/public-keys` | GET | - | - | 取得平台公鑰列表 |
 
 ---
 
@@ -371,7 +375,21 @@ Content-Type: application/json
     "event_id": "550e8400-e29b-41d4-a716-446655440000",
     "is_signature_valid": true,
     "is_hidden": false,
-    "created_at": "2025-01-01T11:05:00Z"
+    "created_at": "2025-01-01T11:05:00Z",
+    "receipt": {
+      "version": "1.0",
+      "receipt_id": "rpt_8f2b3e4d-5c6a-7b8c-9d0e-1f2a3b4c5d6e",
+      "event_id": "550e8400-e29b-41d4-a716-446655440000",
+      "addr": "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
+      "plaintext": "koinvote.com | type:single | $100,000-$150,000 | 550e8400-e29b-41d4-a716-446655440000 | 1704096000 | a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4",
+      "user_sig": "H1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z7...",
+      "timestamp": "2025-01-01T11:05:00.000000Z",
+      "kid": "receipt-key-prod-v1",
+      "server_sig": {
+        "alg": "ed25519",
+        "sig": "a8f3c2e1d9b7f4a6c8e5d2b9f1a3c7e4d6b8f2a5c9e1d7b3f6a4c2e8d5b1f9a7..."
+      }
+    }
   },
   "meta": {
     "invalidated_other_replies": 2
@@ -479,11 +497,120 @@ Content-Type: application/json
 
 ---
 
+### 10. 取得回覆收據
+
+查詢指定回覆的收據憑證。用戶可使用收據進行離線驗證，確認回覆確實被平台接收。
+
+**端點：** `GET /api/v1/events/:event_id/replies/:reply_id/receipt`
+
+**請求頭：**
+```
+無需認證
+```
+
+**路徑參數：**
+
+| 參數名 | 類型 | 必填 | 說明 | 範例 |
+|--------|------|------|------|------|
+| `event_id` | 字串 | 是 | 事件唯一標識符 | `550e8400-e29b-41d4-a716-446655440000` |
+| `reply_id` | 整數 | 是 | 回覆唯一標識 | `42` |
+
+**請求範例：**
+```bash
+GET /api/v1/events/550e8400-e29b-41d4-a716-446655440000/replies/42/receipt
+```
+
+**回應範例（200 成功）：**
+```json
+{
+  "success": true,
+  "data": {
+    "receipt": {
+      "version": "1.0",
+      "receipt_id": "rpt_8f2b3e4d-5c6a-7b8c-9d0e-1f2a3b4c5d6e",
+      "event_id": "550e8400-e29b-41d4-a716-446655440000",
+      "addr": "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
+      "plaintext": "koinvote.com | type:single | $100,000-$150,000 | 550e8400-e29b-41d4-a716-446655440000 | 1704096000 | a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4",
+      "user_sig": "H1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z7...",
+      "timestamp": "2025-01-01T11:05:00.000000Z",
+      "kid": "receipt-key-prod-v1",
+      "server_sig": {
+        "alg": "ed25519",
+        "sig": "a8f3c2e1d9b7f4a6c8e5d2b9f1a3c7e4d6b8f2a5c9e1d7b3f6a4c2e8d5b1f9a7..."
+      }
+    }
+  }
+}
+```
+
+**備註：**
+- 收據格式符合 `koinvote-prd-receipt-1019.txt` 規範
+- 用戶可使用收據進行離線驗證
+- 平台簽章 (`server_sig`) 保證收據真實性
+- 驗證工具需從公鑰列表獲取對應的 `kid` 公鑰
+
+---
+
+### 11. 取得平台公鑰列表
+
+查詢平台收據簽章所使用的公鑰列表。用於離線驗證收據真實性。
+
+**端點：** `GET /api/v1/public-keys`
+
+**請求頭：**
+```
+無需認證
+```
+
+**請求參數（查詢）：**
+
+| 參數名 | 類型 | 必填 | 說明 | 預設值 |
+|--------|------|------|------|--------|
+| `status` | 字串 | 否 | 公鑰狀態過濾 (`active`, `revoked`) | 不限 |
+
+**請求範例：**
+```bash
+GET /api/v1/public-keys?status=active
+```
+
+**回應範例（200 成功）：**
+```json
+{
+  "success": true,
+  "data": {
+    "keys": [
+      {
+        "kid": "receipt-key-prod-v1",
+        "algorithm": "ed25519",
+        "public_key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA...\n-----END PUBLIC KEY-----",
+        "created_at": "2025-01-01T00:00:00Z",
+        "status": "active"
+      },
+      {
+        "kid": "receipt-key-prod-v2",
+        "algorithm": "ed25519",
+        "public_key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA...\n-----END PUBLIC KEY-----",
+        "created_at": "2025-02-01T00:00:00Z",
+        "status": "active"
+      }
+    ]
+  }
+}
+```
+
+**備註：**
+- 公鑰列表公開可查詢，無需認證
+- `kid` 與收據中的 `kid` 欄位對應
+- 用戶使用對應的公鑰驗證 `server_sig`
+- 支援密鑰輪換，舊密鑰標記為 `revoked` 但仍可用於驗證歷史收據
+
+---
+
 ## Admin
 
 以下 API 需要在請求頭中包含有效的 JWT 權杖，並需具備管理員角色權限。
 
-### 10. 更新事件狀態
+### 12. 更新事件狀態
 
 手動觸發 FSM 狀態轉換事件。通常由系統自動觸發，管理員可手動干預。
 
@@ -530,7 +657,7 @@ PUT /api/v1/events/550e8400-e29b-41d4-a716-446655440000/state
 }
 ```
 
-### 11. 取消事件
+### 13. 取消事件
 
 取消事件，可在 `ACTIVE` 或 `ENDED` 狀態下執行。
 
@@ -569,7 +696,7 @@ Content-Type: application/json
 
 ---
 
-### 12. 隱藏事件
+### 14. 隱藏事件
 
 隱藏事件，使其不在公開列表中顯示。不影響事件狀態。
 
@@ -610,7 +737,7 @@ PUT /api/v1/events/550e8400-e29b-41d4-a716-446655440000/hide
 
 ---
 
-### 13. 鎖定事件
+### 15. 鎖定事件
 
 鎖定事件，禁止任何修改操作（如追加獎金、提交回覆）。
 
@@ -651,7 +778,7 @@ PUT /api/v1/events/550e8400-e29b-41d4-a716-446655440000/lock
 
 ---
 
-### 14. 執行抽獎
+### 16. 執行抽獎
 
 手動觸發抽獎流程。通常由系統在事件截止後自動執行。
 
@@ -696,7 +823,7 @@ POST /api/v1/events/550e8400-e29b-41d4-a716-446655440000/lottery
 }
 ```
 
-### 15. 建立快照
+### 17. 建立快照
 
 手動建立參與者餘額快照。通常在事件截止時自動執行。
 
@@ -740,7 +867,7 @@ POST /api/v1/events/550e8400-e29b-41d4-a716-446655440000/snapshot
 
 ---
 
-### 16. 隱藏回覆
+### 18. 隱藏回覆
 
 管理員隱藏不當回覆，使其不在公開列表中顯示。隱藏的回覆不計入有效回覆數。
 
